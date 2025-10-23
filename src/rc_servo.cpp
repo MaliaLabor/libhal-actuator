@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <libhal-actuator/rc_servo.hpp>
+#include <libhal/error.hpp>
 
 #include <libhal-util/map.hpp>
 
