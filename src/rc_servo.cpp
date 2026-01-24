@@ -16,15 +16,14 @@
 #include <libhal/error.hpp>
 
 #include <libhal-util/map.hpp>
+#include <libhal/error.hpp>
+#include <libhal/pwm.hpp>
+#include <limits>
 
 namespace hal::actuator {
 rc_servo::rc_servo(hal::pwm& p_pwm, settings const& p_settings)
   : m_pwm(&p_pwm)
 {
-  // Check if any errors happened while setting the frequency of the pwm.
-  // Using HAL_CHECK will return any errors that occur from the factory
-  // function allowing the caller to choose what to do with the error
-  // information.
   p_pwm.frequency(p_settings.frequency);
 
   // Calculate the wavelength in microseconds.
@@ -81,6 +80,68 @@ void rc_servo::driver_position(hal::degrees p_position)
   auto scaled_percent_raw = map(p_position, m_ranges.angle, m_ranges.percent);
   auto scaled_percent = float(scaled_percent_raw);
   // Set the duty cycle of the pwm with the scaled percent.
+  m_pwm->duty_cycle(scaled_percent);
+}
+
+void rc_servo16::setup(hal::pwm16_channel& p_pwm, settings const& p_settings)
+{
+  auto frequency = static_cast<float>(p_pwm.frequency());
+  // Calculate the wavelength in microseconds.
+  auto wavelength = (1.0f / frequency) * std::micro::den;
+  // TODO(kammce): check if this works
+  // min_percent represents the minimum float to be used with the pwm
+  // signal. The float is calculated by using the minimum width of the
+  // signal in microseconds divided by the wavelength to get the decimal
+  // representation of the float.
+  auto min_percent =
+    std::numeric_limits<hal::u16>::max() *
+    (static_cast<float>(p_settings.min_microseconds) / wavelength);
+  // max_percent represents the maximum float to be used with the pwm
+  // signal. The float is calculated by using the maximum width of the
+  // signal in microseconds divided by the wavelength to get the decimal
+  // representation of the float.
+  auto max_percent =
+    std::numeric_limits<hal::u16>::max() *
+    (static_cast<float>(p_settings.max_microseconds) / wavelength);
+  // percent_range holds float value of min_percent and max_percent for use
+  // with map function used in position().
+  auto percent_range = std::make_pair(min_percent, max_percent);
+  // angle_range holds degrees values of MinAngle and MaxAngle for use with
+  // map function and range checking used in postion()
+  auto angle_range = std::make_pair(static_cast<float>(p_settings.min_angle),
+                                    static_cast<float>(p_settings.max_angle));
+  // If no errors happen, call the constructor with verified parameters
+  m_ranges = ranges{ .percent = percent_range, .angle = angle_range };
+}
+
+rc_servo16::rc_servo16(hal::strong_ptr<hal::pwm16_channel> const& p_pwm,
+                       settings const& p_settings)
+  : m_pwm(p_pwm)
+{
+  setup(*p_pwm, p_settings);
+}
+
+rc_servo16::rc_servo16(hal::pwm_group_manager& p_pwm_manager,
+                       hal::strong_ptr<hal::pwm16_channel> const& p_pwm,
+                       settings const& p_settings)
+  : m_pwm(p_pwm)
+{
+  p_pwm_manager.frequency(p_settings.frequency);
+  setup(*p_pwm, p_settings);
+}
+
+// Drivers must implement functions that are listed in interface.
+void rc_servo16::driver_position(hal::degrees p_position)
+{
+  if (p_position < std::get<0>(m_ranges.angle) ||
+      p_position > std::get<1>(m_ranges.angle)) {
+    hal::safe_throw(hal::argument_out_of_domain(this));
+  }
+
+  auto scaled_percent_raw = map(p_position, m_ranges.angle, m_ranges.percent);
+  auto scaled_percent =
+    static_cast<decltype(m_ranges.percent.first)>(scaled_percent_raw);
+
   m_pwm->duty_cycle(scaled_percent);
 }
 }  // namespace hal::actuator

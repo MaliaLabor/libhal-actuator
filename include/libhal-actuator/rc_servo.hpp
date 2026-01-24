@@ -17,6 +17,7 @@
 // only once, no matter how many times it is included.
 #pragma once
 
+#include <libhal/pointers.hpp>
 #include <libhal/pwm.hpp>
 #include <libhal/servo.hpp>
 
@@ -72,6 +73,76 @@ private:
   // Use a pointer here rather than a reference, because member references
   // implicitly delete move constructors
   hal::pwm* m_pwm;
+  ranges m_ranges{};
+};
+
+/**
+ * @brief Generic RC servo driver.
+ *
+ */
+class rc_servo16 : public hal::servo
+{
+public:
+  /**
+   * @brief Information about the RC servo needed to control it properly
+   *
+   */
+  struct settings
+  {
+    /// @brief PWM signal frequency. Check the documentation for the RC servo to
+    /// determine what range of frequencies can be used with it.
+    u32 frequency = 50;
+    /// @brief The physical minimum angle that the servo shaft can move to
+    hal::degrees min_angle = 0;
+    /// @brief The physical maximum angle that the servo shaft can move to
+    hal::degrees max_angle = 90;
+    /// @brief The minimum pulse width in microseconds that maps to the minimum
+    /// angle of the servo
+    std::uint32_t min_microseconds = 1000;
+    /// @brief The maximum pulse width in microseconds that maps to the maximum
+    /// angle of the servo.
+    std::uint32_t max_microseconds = 2000;
+  };
+
+  /**
+   * @brief Create a rc_servo object.
+   *
+   * @param p_pwm - pwm signal connected to the RC servo
+   * @param p_settings - RC servo settings. Note that this version of the API
+   * ignores the frequency and uses the frequency provided by the p_pwm channel.
+   */
+  rc_servo16(hal::strong_ptr<hal::pwm16_channel> const& p_pwm,
+             settings const& p_settings);
+
+  /**
+   * @brief Create a rc_servo object and change pwm group's frequency
+   *
+   * @param p_pwm_manager - pwm group manager used to set the frequency of the
+   * pwm group to the frequency specified in p_settings.
+   * @param p_pwm - pwm signal connected to the RC servo
+   * @param p_settings - RC servo settings
+   */
+  rc_servo16(hal::pwm_group_manager& p_pwm_manager,
+             hal::strong_ptr<hal::pwm16_channel> const& p_pwm,
+             settings const& p_settings);
+
+private:
+  void setup(hal::pwm16_channel& p_pwm, settings const& p_settings);
+
+  struct ranges
+  {
+    std::pair<u16, u16> percent{};
+    std::pair<float, float> angle{};
+  };
+
+  // Use override keyword to make it clear that this api is for virtual
+  // functions
+  void driver_position(hal::degrees p_position) override;
+
+  // Use m_ prefix for private/protected class members.
+  // Use a pointer here rather than a reference, because member references
+  // implicitly delete move constructors
+  hal::strong_ptr<hal::pwm16_channel> m_pwm;
   ranges m_ranges{};
 };
 }  // namespace hal::actuator

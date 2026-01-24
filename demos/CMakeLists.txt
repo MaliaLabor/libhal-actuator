@@ -14,6 +14,9 @@
 
 cmake_minimum_required(VERSION 3.20)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_COLOR_DIAGNOSTICS ON)
+
 project(demos LANGUAGES CXX)
 
 libhal_build_demos(
@@ -24,6 +27,7 @@ libhal_build_demos(
   mc_x_v2_v5
   mc_x_v2_resources
   rc_servo
+  rc_servo16
 
   INCLUDES
   .

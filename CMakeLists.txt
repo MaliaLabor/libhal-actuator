@@ -13,6 +13,9 @@
 # limitations under the License.
 cmake_minimum_required(VERSION 3.15)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_COLOR_DIAGNOSTICS ON)
+
 project(libhal-actuator LANGUAGES CXX)
 
 libhal_test_and_make_library(

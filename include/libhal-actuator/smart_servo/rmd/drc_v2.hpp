@@ -288,6 +288,7 @@ public:
    * object.
    */
   rotation_sensor acquire_rotation_sensor();
+  hal::v5::strong_ptr<hal::rotation_sensor> acquire_rotation_sensor2();
 
   /**
    * @brief Create a hal::temperature_sensor driver using the drc driver
@@ -297,6 +298,7 @@ public:
    * returned object.
    */
   temperature_sensor acquire_temperature_sensor();
+  hal::v5::strong_ptr<hal::temperature_sensor> acquire_temperature_sensor2();
 
   /**
    * @brief Create a hal::motor implementation from the drc driver
@@ -307,6 +309,7 @@ public:
    * This object's lifetime must exceed the lifetime of the returned object.
    */
   motor acquire_motor(hal::rpm p_max_speed);
+  hal::v5::strong_ptr<hal::motor> acquire_motor2(hal::rpm p_max_speed);
 
   /**
    * @brief Create a hal::servo driver using the drc driver
@@ -316,6 +319,7 @@ public:
    * object's lifetime must exceed the lifetime of the returned object.
    */
   servo acquire_servo(hal::rpm p_max_speed);
+  hal::v5::strong_ptr<hal::servo> acquire_servo2(hal::rpm p_max_speed);
 
   /**
    * @brief Create a hal::angular_velocity_sensor driver using the drc driver
@@ -325,6 +329,8 @@ public:
    * the returned object.
    */
   angular_velocity_sensor acquire_angular_velocity_sensor();
+  hal::v5::strong_ptr<hal::angular_velocity_sensor>
+  acquire_angular_velocity_sensor2();
 
   /**
    * @brief Request feedback from the motor

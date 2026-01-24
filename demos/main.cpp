@@ -14,22 +14,11 @@
 
 #include <exception>
 
-#include <libhal-util/serial.hpp>
-#include <libhal-util/steady_clock.hpp>
-#include <libhal/error.hpp>
-
 #include <resource_list.hpp>
 
 int main()
 {
   initialize_platform();
-
-  try {
-    application();
-  } catch (hal::bad_optional_ptr_access const& p_error) {
-    throw;
-  }  // Allow any other exceptions to terminate the application
-
-  // Terminate if the code reaches this point.
+  application();
   std::terminate();
 }

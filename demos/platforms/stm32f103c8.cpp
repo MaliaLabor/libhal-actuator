@@ -12,21 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <libhal/units.hpp>
-
 #include <libhal-arm-mcu/dwt_counter.hpp>
 #include <libhal-arm-mcu/startup.hpp>
-#include <libhal-arm-mcu/system_control.hpp>
-
 #include <libhal-arm-mcu/stm32f1/can.hpp>
 #include <libhal-arm-mcu/stm32f1/clock.hpp>
 #include <libhal-arm-mcu/stm32f1/constants.hpp>
 #include <libhal-arm-mcu/stm32f1/output_pin.hpp>
+#include <libhal-arm-mcu/stm32f1/timer.hpp>
 #include <libhal-arm-mcu/stm32f1/uart.hpp>
-
+#include <libhal-arm-mcu/system_control.hpp>
 #include <libhal-exceptions/control.hpp>
 #include <libhal-util/steady_clock.hpp>
 #include <libhal/pointers.hpp>
+#include <libhal/pwm.hpp>
+#include <libhal/units.hpp>
 
 #include <resource_list.hpp>
 
@@ -141,4 +140,38 @@ hal::v5::strong_ptr<hal::pwm> pwm()
   throw hal::operation_not_supported(nullptr);
 }
 
+auto& timer1()
+{
+  static hal::stm32f1::advanced_timer<hal::stm32f1::peripheral::timer1>
+    timer1{};
+  return timer1;
+}
+
+hal::v5::optional_ptr<hal::pwm16_channel> pwm16_channel_ptr;
+hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel()
+{
+  if (pwm16_channel_ptr) {
+    return pwm16_channel_ptr;
+  }
+
+  auto pwm = timer1().acquire_pwm16_channel(hal::stm32f1::timer1_pin::pa8);
+  using PwmType = decltype(pwm);
+  pwm16_channel_ptr =
+    hal::v5::make_strong_ptr<PwmType>(driver_allocator(), std::move(pwm));
+  return pwm16_channel_ptr;
+}
+
+hal::v5::optional_ptr<hal::pwm_group_manager> pwm_group_manager_ptr;
+hal::v5::strong_ptr<hal::pwm_group_manager> pwm_frequency()
+{
+  if (pwm_group_manager_ptr) {
+    return pwm_group_manager_ptr;
+  }
+
+  auto timer_pwm_frequency = timer1().acquire_pwm_group_frequency();
+  pwm_group_manager_ptr =
+    hal::v5::make_strong_ptr<decltype(timer_pwm_frequency)>(
+      driver_allocator(), std::move(timer_pwm_frequency));
+  return pwm_group_manager_ptr;
+}
 }  // namespace resources
