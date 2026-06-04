@@ -109,6 +109,12 @@ hal::v5::strong_ptr<hal::serial> console()
                                                       });
 }
 
+hal::v5::strong_ptr<hal::serial> uart2()
+{
+  return hal::v5::make_strong_ptr<hal::stm32f1::uart>(
+    driver_allocator(), hal::port<2>, hal::buffer<128>);
+}
+
 hal::v5::strong_ptr<hal::output_pin> status_led()
 {
   if (status_led_ptr) {

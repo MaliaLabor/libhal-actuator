@@ -23,11 +23,14 @@ libhal_build_demos(
   DEMOS
   drc_v2
   drc_v2_resources
+  dynamixel_scan
   mc_x_v2
   mc_x_v2_v5
   mc_x_v2_resources
   rc_servo
   rc_servo16
+  rx_64
+  rx_64_dual
 
   INCLUDES
   .

@@ -52,6 +52,7 @@ std::pmr::polymorphic_allocator<> driver_allocator();
 void reset();
 void sleep(hal::time_duration p_duration);
 hal::v5::strong_ptr<hal::serial> console();
+hal::v5::strong_ptr<hal::serial> uart2();
 hal::v5::strong_ptr<hal::steady_clock> clock();
 hal::v5::strong_ptr<hal::output_pin> status_led();
 hal::v5::strong_ptr<hal::can_transceiver> can_transceiver();
