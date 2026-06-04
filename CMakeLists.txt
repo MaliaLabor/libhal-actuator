@@ -23,6 +23,7 @@ libhal_test_and_make_library(
 
   SOURCES
   src/rc_servo.cpp
+  src/mx_64.cpp
   src/rx_64.cpp
   src/smart_servo/rmd/drc_v2.cpp
   src/smart_servo/rmd/mc_x_v2.cpp
@@ -30,6 +31,7 @@ libhal_test_and_make_library(
   TEST_SOURCES
   tests/main.test.cpp
   tests/rc_servo.test.cpp
+  tests/mx_64.test.cpp
   tests/rx_64.test.cpp
   tests/smart_servo/rmd/drc.test.cpp
   tests/smart_servo/rmd/mc_x.test.cpp

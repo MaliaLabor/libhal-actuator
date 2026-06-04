@@ -27,6 +27,7 @@ libhal_build_demos(
   mc_x_v2
   mc_x_v2_v5
   mc_x_v2_resources
+  mx_64
   rc_servo
   rc_servo16
   rx_64
