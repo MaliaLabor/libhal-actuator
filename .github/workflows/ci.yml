@@ -34,38 +34,43 @@ jobs:
     uses: libhal/ci/.github/workflows/package_and_upload_all.yml@5.x.y
     secrets: inherit
 
-  # demo_check_lpc4074:
-  #   uses: libhal/ci/.github/workflows/app_builder2.yml@5.x.y
-  #   with:
-  #     repo: libhal/libhal-actuator
-  #     dir: demos
-  #     compiler_profile: hal/tc/arm-gcc
-  #     platform_profile: hal/mcu/lpc4074
-  #   secrets: inherit
+  demo_check_lpc4074:
+    uses: libhal/ci/.github/workflows/app_builder2.yml@5.x.y
+    with:
+      repo: libhal/libhal-actuator
+      dir: demos
+      compiler_profile: hal/tc/llvm
+      platform_profile: hal/mcu/lpc4074
+      library_dir: .
+    secrets: inherit
 
-  # demo_check_lpc4078:
-  #   uses: libhal/ci/.github/workflows/app_builder2.yml@5.x.y
-  #   with:
-  #     repo: libhal/libhal-actuator
-  #     dir: demos
-  #     compiler_profile: hal/tc/arm-gcc
-  #     platform_profile: hal/mcu/lpc4078
-  #   secrets: inherit
+  demo_check_lpc4078:
+    uses: libhal/ci/.github/workflows/app_builder2.yml@5.x.y
+    with:
+      repo: libhal/libhal-actuator
+      dir: demos
+      compiler_profile: hal/tc/gcc
+      platform_profile: hal/mcu/lpc4078
+      library_dir: .
+    secrets: inherit
 
-  # demo_check_stm32f103c8:
-  #   uses: libhal/ci/.github/workflows/app_builder2.yml@5.x.y
-  #   with:
-  #     repo: libhal/libhal-actuator
-  #     dir: demos
-  #     compiler_profile: hal/tc/arm-gcc
-  #     platform_profile: hal/mcu/stm32f103c8
-  #   secrets: inherit
+  demo_check_stm32f103c8:
+    uses: libhal/ci/.github/workflows/app_builder2.yml@5.x.y
+    with:
+      repo: libhal/libhal-actuator
+      dir: demos
+      compiler_profile: hal/tc/llvm
+      platform_profile: hal/mcu/stm32f103c8
+      library_dir: .
+    secrets: inherit
 
+  # # TODO(#53): Re-enable micromod demo below
   # demo_check_mod-stm32f1-v5:
   #   uses: libhal/ci/.github/workflows/app_builder2.yml@5.x.y
   #   with:
   #     repo: libhal/libhal-actuator
   #     dir: demos
-  #     compiler_profile: hal/tc/arm-gcc
+  #     compiler_profile: hal/tc/llvm
   #     platform_profile: hal/bsp/mod-stm32f1-v5
+  #     library_dir: .
   #   secrets: inherit

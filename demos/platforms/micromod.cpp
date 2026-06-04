@@ -120,4 +120,16 @@ hal::v5::strong_ptr<hal::pwm> pwm()
   // return hal::micromod::v2::pwm();
 }
 
+hal::v5::strong_ptr<hal::serial> uart2()
+{
+  throw hal::operation_not_supported(nullptr);
+}
+hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel()
+{
+  throw hal::operation_not_supported(nullptr);
+}
+hal::v5::strong_ptr<hal::pwm_group_manager> pwm_frequency()
+{
+  throw hal::operation_not_supported(nullptr);
+}
 }  // namespace resources

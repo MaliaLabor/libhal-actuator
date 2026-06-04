@@ -128,6 +128,11 @@ hal::v5::strong_ptr<hal::i2c> i2c()
                                                      .clock_rate = 100.0_kHz,
                                                    });
 }
+
+hal::v5::strong_ptr<hal::serial> uart2()
+{
+  throw hal::operation_not_supported(nullptr);
+}
 hal::v5::strong_ptr<hal::pwm> pwm()
 {
   return hal::v5::make_strong_ptr<hal::lpc40::pwm>(
@@ -138,13 +143,19 @@ hal::v5::strong_ptr<hal::can_transceiver> can_transceiver()
 {
   throw hal::operation_not_supported(nullptr);
 }
-
 hal::v5::strong_ptr<hal::can_bus_manager> can_bus_manager()
 {
   throw hal::operation_not_supported(nullptr);
 }
-
 hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter()
+{
+  throw hal::operation_not_supported(nullptr);
+}
+hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel()
+{
+  throw hal::operation_not_supported(nullptr);
+}
+hal::v5::strong_ptr<hal::pwm_group_manager> pwm_frequency()
 {
   throw hal::operation_not_supported(nullptr);
 }

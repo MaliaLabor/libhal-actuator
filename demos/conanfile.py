@@ -24,4 +24,4 @@ class demos(ConanFile):
             self, inject_util=False)
         self.requires("libhal-util/[^5.6.0]")
         self.requires("libhal-expander/[^1.3.1]")
-        self.requires("libhal-actuator/[1.2.3 || latest]")
+        self.requires("libhal-actuator/latest")
