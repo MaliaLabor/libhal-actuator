@@ -31,45 +31,44 @@
 
 namespace hal::actuator {
 /**
- * @brief Dynamixel RX-64 is a smart actuator capable of reporting position,
+ * @brief Dynamixel MX-64 is a smart actuator capable of reporting position,
  * speed, and voltage. They also have the ability to set limits for angles,
- * voltage, torque, temperature, compliance margins and slopes, and response
- * delay.
+ * voltage, torque, temperature, PID, and response delay.
  *
  * No downloadable datasheet available, link to documentation below.
- * https://docs.robotis.com/docs/dxl/model_reference/rx_series/rx-64/
+ * https://docs.robotis.com/docs/dxl/model_reference/mx_series/mx-64
  *
  */
-class rx_64
+class mx_64
 {
 public:
   /**
    * @brief Configuration object containing settings to use when constructing
-   * rx_64 object
+   * mx_64 object
    *
    */
   struct config
   {
-    /// @brief Baud rate to communicate with rx_64 over serial
+    /// @brief Baud rate to communicate with mx_64 over serial
     hertz baud_rate = 57600;
-    /// @brief Id of rx_64
+    /// @brief Id of mx_64
     uint8_t id;
     /// @brief Minimum angle to limit movement to
     hal::degrees min_angle = 0;
     /// @brief Maximum angle to limit movement to
-    hal::degrees max_angle = 300;
+    hal::degrees max_angle = 360;
     /// @brief Enable torque on setup
     bool torque_enable = true;
   };
 
   /**
-   * @brief Construct a new rx_64 object
+   * @brief Construct a new mx_64 object
    *
-   * @param p_serial Serial to use to communicate with rx_64
+   * @param p_serial Serial to use to communicate with mx_64
    * @param p_settings Configuration object containing settings to use
    * @param p_clock A steady clock used to add delays for communication
    */
-  rx_64(hal::strong_ptr<hal::serial> const& p_serial,
+  mx_64(hal::strong_ptr<hal::serial> const& p_serial,
         config const& p_settings,
         hal::strong_ptr<hal::steady_clock> const& p_clock);
 
@@ -77,7 +76,7 @@ public:
    * @brief Check if an ID is in use.
    *
    * @param p_id - ID to check.
-   * @param p_serial - Serial to use to communicate with rx_64
+   * @param p_serial - Serial to use to communicate with mx_64
    * @param p_clock - A steady clock used to add delays for communication
    * @return true - Servo using this ID is present on bus.
    * @return false - No connected servos using this ID.
@@ -90,7 +89,7 @@ public:
    * @brief Iterate through all valid IDs and return the first ID that is
    * present. If none are found, 254 (the broadcast ID) will be returned.
    *
-   * @param p_serial - Serial to use to communicate with rx_64
+   * @param p_serial - Serial to use to communicate with mx_64
    * @param p_clock - A steady clock used to add delays for communication
    * @return u8 - ID of present servo or 254 if none found
    */
@@ -105,10 +104,10 @@ public:
   void led(bool p_on);
 
   /**
-   * @brief Moving status of rx_64.
+   * @brief Moving status of mx_64.
    *
-   * @return true - rx_64 is moving.
-   * @return false - rx_64 is not moving.
+   * @return true - mx_64 is moving.
+   * @return false - mx_64 is not moving.
    */
   [[nodiscard]] bool is_moving();
 
@@ -271,8 +270,8 @@ public:
    * @brief Set the minimum operating voltage.
    *
    * If the input voltage is below this number, the Voltage Range Error flag is
-   * set to true. Range is 5.0 - 25.0, Values exceeding these bounds will be
-   * clamped to be 5.0 when lower and 25.0 when higher.
+   * set to true. Range is 5.0 - 16.0, Values exceeding these bounds will be
+   * clamped to be 5.0 when lower and 16.0 when higher.
    *
    * @param p_voltage - Minimum operating voltage.
    */
@@ -282,8 +281,8 @@ public:
    * @brief Set the maximum operating voltage.
    *
    * If the input voltage is above this number, the Voltage Range Error flag is
-   * set to true. Range is 5.0 - 25.0, Values exceeding these bounds will be
-   * clamped to be 5.0 when lower and 25.0 when higher.
+   * set to true. Range is 5.0 - 16.0, Values exceeding these bounds will be
+   * clamped to be 5.0 when lower and 16.0 when higher.
    *
    * @param p_voltage - Maximum operating voltage.
    */
@@ -324,8 +323,8 @@ public:
   /**
    * @brief Set the minimum angle to restrain motion to.
    *
-   * Range of motion is 0.0 - 300.0, Values exceeding these bounds will be
-   * clamped to be 0.0 when lower and 300.0 when higher.
+   * Range of motion is 0.0 - 360.0, Values exceeding these bounds will be
+   * clamped to be 0.0 when lower and 360.0 when higher.
    *
    * @param p_angle - Minimum angle used to restrain motion to.
    */
@@ -334,8 +333,8 @@ public:
   /**
    * @brief Set the maximum angle to restrain motion to.
    *
-   * Range of motion is 0.0 - 300.0, Values exceeding these bounds will be
-   * clamped to be 0.0 when lower and 300.0 when higher.
+   * Range of motion is 0.0 - 360.0, Values exceeding these bounds will be
+   * clamped to be 0.0 when lower and 360.0 when higher.
    *
    * @param p_angle - Maximum angle used to restrain motion to.
    */
@@ -359,11 +358,11 @@ public:
    * @param p_angle - Angle to set the leading servo to.
    * @param p_opposing_servo - Opposing servo to send reversed angles to.
    */
-  void sync_position(hal::degrees p_angle, rx_64 p_opposing_servo);
+  void sync_position(hal::degrees p_angle, mx_64 p_opposing_servo);
 
 private:
   /**
-   * @brief Addresses for registers of rx_64
+   * @brief Addresses for registers of mx_64
    *
    */
   enum class register_byte : hal::byte
@@ -374,7 +373,7 @@ private:
     firmware_ver = 0x02,
     /// @brief Unique ID
     id = 0x03,
-    /// @brief Baud rate of serial communication between controller and rx_64
+    /// @brief Baud rate of serial communication between controller and mx_64
     baud_rate = 0x04,
     /// @brief Time between sending an instruction and receiveing a status
     /// packet
@@ -395,23 +394,20 @@ private:
     status_return = 0x10,
     /// @brief Which errors cause LED to blink
     alarm_led = 0x11,
-    /// @brief Which errors cause rx_64 to shutdown
+    /// @brief Which errors cause mx_64 to shutdown
     shutdown = 0x12,
+    multi_turn_offset = 0x14,
+    resolution_divider = 0x16,
     /// @brief Enable torque usage
     torque_enable = 0x18,
     /// @brief Toggle LED
     led_toggle = 0x19,
-    /// @brief Margin error between goal position and present position in the
-    /// clockwise direction
-    cw_compliance_margin = 0x1A,
-    /// @brief Margin error between goal position and present position in the
-    /// counter clockwise direction
-    ccw_compliance_margin = 0x1B,
-    /// @brief Level of Torque near the goal position in clockwise direction
-    cw_compliance_slope = 0x1C,
-    /// @brief Level of Torque near the goal position in counter clockwise
-    /// direction
-    ccw_compliance_slope = 0x1D,
+    /// @brief Derivative gain value of PID
+    d_gain = 0x1A,
+    /// @brief Integral gain value of PID
+    i_gain = 0x1B,
+    /// @brief Proportional band gain value of PID
+    p_gain = 0x1C,
     /// @brief Position to move to
     goal_position = 0x1E,
     /// @brief Moving speed to goal position
@@ -430,12 +426,22 @@ private:
     present_temp = 0x2B,
     /// @brief Flag for if an instruction is registered for standy execution
     instruction_registered = 0x2C,
-    /// @brief Is rx_64 moving
+    /// @brief Is mx_64 moving
     moving_status = 0x2E,
     /// @brief Lock EEPROM from modification
     lock_eeprom = 0x2F,
     /// @brief Minimum current to drive motor
-    punch = 0x30
+    punch = 0x30,
+    /// @brief Realtime clock of MX-64
+    realtime_tick = 0x32,
+    /// @brief Consuming current
+    current = 0x44,
+    /// @brief Torque control mode enable
+    torque_ctrl_mode_enable = 0x46,
+    /// @brief Goal torque applied before stopping
+    goal_torque = 0x47,
+    /// @brief Goal acceleration
+    goal_accel = 0x49
   };
 
   template<usize Size>
