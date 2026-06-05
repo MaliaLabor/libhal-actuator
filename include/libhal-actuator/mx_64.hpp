@@ -35,6 +35,9 @@ namespace hal::actuator {
  * speed, and voltage. They also have the ability to set limits for angles,
  * voltage, torque, temperature, PID, and response delay.
  *
+ * No downloadable datasheet available, link to documentation below.
+ * https://docs.robotis.com/docs/dxl/model_reference/mx_series/mx-64
+ *
  */
 class mx_64
 {
@@ -446,14 +449,11 @@ private:
   {
     using namespace std::chrono_literals;
 
-    std::array<hal::byte, 8> send_bytes = { 0xFF,
-                                            0xFF,
-                                            m_id,
-                                            0x04,
-                                            0x02,
-                                            (hal::byte)p_register_address,
-                                            (hal::byte)Size,
-                                            0x00 };
+    auto const address = static_cast<hal::byte>(p_register_address);
+    auto const size_byte = static_cast<hal::byte>(Size);
+
+    std::array<hal::byte, 8> send_bytes = { 0xFF, 0xFF,    m_id,      0x04,
+                                            0x02, address, size_byte, 0x00 };
     hal::byte const checksum =
       std::accumulate(&send_bytes[2], &send_bytes[7], 0);
     send_bytes[7] = ~checksum;
@@ -467,7 +467,8 @@ private:
         hal::read<read_size>(*m_serial, hal::create_timeout(*m_clock, 500ms));
       if (response[0] == 0xFF && response[1] == 0xFF) {
         // device responded
-        // TODO(#47 and #48): check checksum and check for errors
+        // TODO(#47): check for errors
+        // TODO(#48): check checksum
         for (usize i = 0; i < Size; i++) {
           return_array[i] = response[5 + i];
         }
@@ -488,8 +489,9 @@ private:
     std::array<hal::byte, 6> header_bytes = { 0xFF,          0xFF, m_id,
                                               packet_length, 0x03, address };
 
-    hal::byte checksum = m_id + packet_length + 0x03 + address;
-    checksum += std::accumulate(p_data.begin(), p_data.end(), 0);
+    hal::byte checksum =
+      std::accumulate(header_bytes.begin() + 2, header_bytes.end(), 0);
+    checksum = std::accumulate(p_data.begin(), p_data.end(), checksum);
     checksum = ~checksum;
 
     hal::write(*m_serial, header_bytes, hal::never_timeout());
