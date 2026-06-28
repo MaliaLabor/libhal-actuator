@@ -17,6 +17,7 @@
 // only once, no matter how many times it is included.
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 
 #include <array>
@@ -60,6 +61,9 @@ public:
     hal::degrees max_angle = 300;
     /// @brief Enable torque on setup
     bool torque_enable = true;
+    /// @brief Time before assuming that there was an error response from the
+    /// motor
+    hal::time_duration response_timeout = std::chrono::milliseconds(50);
   };
 
   /**
@@ -361,6 +365,19 @@ public:
    */
   void sync_position(hal::degrees p_angle, rx_64 p_opposing_servo);
 
+  /**
+   * @brief Returns the last error code retrieved from the servo motor
+   *
+   * See https://docs.robotis.com/docs/dxl/protocol/protocol1/#error for error
+   * code information.
+   *
+   * @return auto - error code byte
+   */
+  [[nodiscard]] auto last_error_code() const
+  {
+    return m_last_error;
+  }
+
 private:
   /**
    * @brief Addresses for registers of rx_64
@@ -457,8 +474,8 @@ private:
     try {
       auto constexpr read_size = 6 + Size;
 
-      auto const response =
-        hal::read<read_size>(*m_serial, hal::create_timeout(*m_clock, 500ms));
+      auto const response = hal::read<read_size>(
+        *m_serial, hal::create_timeout(*m_clock, m_response_timeout));
       if (response[0] == 0xFF && response[1] == 0xFF) {
         // device responded
         // TODO(#47): check for errors
@@ -488,24 +505,28 @@ private:
     checksum = std::accumulate(p_data.begin(), p_data.end(), checksum);
     checksum = ~checksum;
 
-    hal::write(*m_serial, header_bytes, hal::never_timeout());
-    hal::write(*m_serial, p_data, hal::never_timeout());
-    hal::write(*m_serial, std::array{ checksum }, hal::never_timeout());
-
+    m_last_error = 0;
     try {
-      using namespace std::chrono_literals;
-      auto const response =
-        hal::read<6>(*m_serial, hal::create_timeout(*m_clock, 500ms));
-      if (response[0] == 0xFF && response[1] == 0xFF) {
-        // device responded
-        hal::byte received_chksm =
-          std::accumulate(&response[2], &response[4], 0);
-        received_chksm = ~received_chksm;
-        if (received_chksm == response[5]) {
-          // checksum match
-          // TODO(#47): check for errors
+      do {
+        hal::write(*m_serial, header_bytes, hal::never_timeout());
+        hal::write(*m_serial, p_data, hal::never_timeout());
+        hal::write(*m_serial, std::array{ checksum }, hal::never_timeout());
+
+        auto const response = hal::read<6>(
+          *m_serial, hal::create_timeout(*m_clock, m_response_timeout));
+        if (response[0] == 0xFF && response[1] == 0xFF) {
+          // device responded
+          hal::byte received_chksm =
+            std::accumulate(&response[2], &response[4], 0);
+          received_chksm = ~received_chksm;
+          m_last_error = response[4];
+          if (received_chksm == response[5]) {
+            // checksum match
+            // TODO(#47): check for errors
+          }
         }
-      }
+        // check if the last error had a checksum error
+      } while (m_last_error & (1 << 4));
     } catch (hal::timed_out const&) {
       return;
     }
@@ -514,6 +535,8 @@ private:
   hal::strong_ptr<hal::serial> m_serial;
   hal::strong_ptr<hal::steady_clock> m_clock;
   std::pair<hal::degrees, hal::degrees> m_range;
+  hal::time_duration m_response_timeout;
   hal::byte m_id;
+  hal::byte m_last_error;
 };
 }  // namespace hal::actuator

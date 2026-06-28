@@ -42,6 +42,7 @@ rx_64::rx_64(hal::strong_ptr<hal::serial> const& p_serial,
              hal::strong_ptr<hal::steady_clock> const& p_clock)
   : m_serial(p_serial)
   , m_clock(p_clock)
+  , m_response_timeout(p_settings.response_timeout)
   , m_id(p_settings.id)
 {
   using namespace std::chrono_literals;

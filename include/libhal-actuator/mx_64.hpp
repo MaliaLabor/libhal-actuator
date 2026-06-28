@@ -501,7 +501,7 @@ private:
     try {
       using namespace std::chrono_literals;
       auto const response =
-        hal::read<6>(*m_serial, hal::create_timeout(*m_clock, 500ms));
+        hal::read<6>(*m_serial, hal::create_timeout(*m_clock, 50ms));
       if (response[0] == 0xFF && response[1] == 0xFF) {
         // device responded
         hal::byte received_chksm =

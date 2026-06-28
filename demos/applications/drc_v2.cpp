@@ -47,6 +47,8 @@ void application()
       hal::actuator::rmd_drc_v2 drc(
         *can_transceiver, *can_identifier_filter, *clock, 6.0f, address);
 
+      hal::print<128>(*console, "RMD DRC ID = 0x%02X\n", address);
+
       auto print_feedback = [&drc, &console]() {
         drc.feedback_request(hal::actuator::rmd_drc_v2::read::status_2);
         drc.feedback_request(
@@ -100,27 +102,27 @@ void application()
         hal::delay(*clock, 5000ms);
         print_feedback();
 
-        drc.position_control(0.0_deg, 50.0_rpm);
+        drc.position_control(0.0_deg, 5.0_rpm);
         hal::delay(*clock, 5000ms);
         print_feedback();
 
-        drc.position_control(-45.0_deg, 50.0_rpm);
+        drc.position_control(-45.0_deg, 5.0_rpm);
         hal::delay(*clock, 5000ms);
         print_feedback();
 
-        drc.position_control(90.0_deg, 50.0_rpm);
+        drc.position_control(90.0_deg, 5.0_rpm);
         hal::delay(*clock, 5000ms);
         print_feedback();
 
-        drc.position_control(180.0_deg, 50.0_rpm);
+        drc.position_control(180.0_deg, 5.0_rpm);
         hal::delay(*clock, 5000ms);
         print_feedback();
 
-        drc.position_control(-360.0_deg, 50.0_rpm);
+        drc.position_control(-360.0_deg, 5.0_rpm);
         hal::delay(*clock, 5000ms);
         print_feedback();
 
-        drc.position_control(0.0_deg, 50.0_rpm);
+        drc.position_control(0.0_deg, 5.0_rpm);
         hal::delay(*clock, 5000ms);
         print_feedback();
       }
