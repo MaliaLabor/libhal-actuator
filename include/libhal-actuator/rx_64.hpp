@@ -102,6 +102,22 @@ public:
                         hal::strong_ptr<hal::steady_clock> const& p_clock);
 
   /**
+   * @brief Execute commands registered with reg write function.
+   *
+   * @param p_id - ID of servo to communicate with or 0xFE for broadcast
+   * @param p_serial - Serial to use to communicate with rx_64
+   */
+  static void execute_registered_action(
+    uint8_t p_id,
+    hal::strong_ptr<hal::serial> const& p_serial);
+
+  /**
+   * @brief Use ping command to check for errors.
+   *
+   */
+  void ping_for_status();
+
+  /**
    * @brief Toggle LED on or off.
    *
    * @param p_on On status of LED to set.
@@ -241,6 +257,16 @@ public:
    * @param p_angle - Angle to move to.
    */
   void position(hal::degrees p_angle);
+
+  /**
+   * @brief Register a position move to be executed when action command is
+   * called.
+   *
+   * Angle to move to must be within range of min and max angle.
+   *
+   * @param p_angle - Angle to move to.
+   */
+  void queue_position(hal::degrees p_angle);
 
   /**
    * @brief Enable or disable torque usage.
@@ -499,6 +525,47 @@ private:
     auto const address = static_cast<hal::byte>(p_register_address);
     std::array<hal::byte, 6> header_bytes = { 0xFF,          0xFF, m_id,
                                               packet_length, 0x03, address };
+
+    hal::byte checksum =
+      std::accumulate(header_bytes.begin() + 2, header_bytes.end(), 0);
+    checksum = std::accumulate(p_data.begin(), p_data.end(), checksum);
+    checksum = ~checksum;
+
+    m_last_error = 0;
+    try {
+      do {
+        hal::write(*m_serial, header_bytes, hal::never_timeout());
+        hal::write(*m_serial, p_data, hal::never_timeout());
+        hal::write(*m_serial, std::array{ checksum }, hal::never_timeout());
+
+        auto const response = hal::read<6>(
+          *m_serial, hal::create_timeout(*m_clock, m_response_timeout));
+        if (response[0] == 0xFF && response[1] == 0xFF) {
+          // device responded
+          hal::byte received_chksm =
+            std::accumulate(&response[2], &response[4], 0);
+          received_chksm = ~received_chksm;
+          m_last_error = response[4];
+          if (received_chksm == response[5]) {
+            // checksum match
+            // TODO(#47): check for errors
+          }
+        }
+        // check if the last error had a checksum error
+      } while (m_last_error & (1 << 4));
+    } catch (hal::timed_out const&) {
+      return;
+    }
+  }
+
+  template<usize Size>
+  void reg_write(register_byte p_register_address,
+                 std::array<hal::byte, Size> p_data)
+  {
+    constexpr hal::byte packet_length = 0x03 + Size;
+    auto const address = static_cast<hal::byte>(p_register_address);
+    std::array<hal::byte, 6> header_bytes = { 0xFF,          0xFF, m_id,
+                                              packet_length, 0x04, address };
 
     hal::byte checksum =
       std::accumulate(header_bytes.begin() + 2, header_bytes.end(), 0);

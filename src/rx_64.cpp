@@ -96,6 +96,39 @@ u8 rx_64::scan_for_id(hal::strong_ptr<hal::serial> const& p_serial,
   return 254;
 }
 
+void rx_64::execute_registered_action(
+  uint8_t p_id,
+  hal::strong_ptr<hal::serial> const& p_serial)
+{
+  using namespace std::chrono_literals;
+  std::array<hal::byte, 6> send_bytes = { 0xFF, 0xFF, (hal::byte)p_id,
+                                          0x02, 0x05, 0x00 };
+  hal::byte const checksum = std::accumulate(&send_bytes[2], &send_bytes[5], 0);
+  send_bytes[5] = ~checksum;
+  hal::write(*p_serial, send_bytes, hal::never_timeout());
+}
+
+void rx_64::ping_for_status()
+{
+  using namespace std::chrono_literals;
+  std::array<hal::byte, 6> send_bytes = { 0xFF, 0xFF, m_id, 0x02, 0x01, 0x00 };
+  hal::byte const checksum = std::accumulate(&send_bytes[2], &send_bytes[5], 0);
+  send_bytes[5] = ~checksum;
+  hal::write(*m_serial, send_bytes, hal::never_timeout());
+
+  m_last_error = 0;
+
+  try {
+    auto response =
+      hal::read<6>(*m_serial, hal::create_timeout(*m_clock, 500ms));
+    if (response[0] == 0xFF && response[1] == 0xFF) {
+      // device responded, id is valid
+      m_last_error = response[4];
+    }
+  } catch (hal::timed_out const&) {
+  }
+}
+
 void rx_64::led(bool p_on)
 {
   write_register(register_byte::led_toggle,
@@ -248,6 +281,16 @@ void rx_64::position(hal::degrees p_angle)
   hal::byte const value_hi = (angle_byte >> 8);
   write_register(register_byte::goal_position,
                  std::array{ value_low, value_hi });
+}
+
+void rx_64::queue_position(hal::degrees p_angle)
+{
+  auto const clamped_angle = std::clamp(p_angle, m_range.first, m_range.second);
+  auto const angle_byte = static_cast<u16>(
+    hal::map(clamped_angle, max_degree_range, position_raw_range));
+  hal::byte const value_low = angle_byte;
+  hal::byte const value_hi = (angle_byte >> 8);
+  reg_write(register_byte::goal_position, std::array{ value_low, value_hi });
 }
 
 void rx_64::torque_enable(bool p_enable)
